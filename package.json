@@ -1,0 +1,31 @@
+{
+  "name": "js13k-2025",
+  "version": "1.0.0",
+  "author": "Alexey Litvinov",
+  "devDependencies": {
+    "@babel/preset-flow": "7.27.1",
+    "@eslint/config-helpers": "0.3.1",
+    "babel-plugin-syntax-hermes-parser": "0.31.0",
+    "clean-css": "5.3.3",
+    "ect-bin": "1.4.1",
+    "eslint": "9.33.0",
+    "flow-bin": "0.278.0",
+    "html-minifier": "4.0.0",
+    "linter-config": "github:mightyaleksey/linter-config",
+    "posthtml": "0.16.6",
+    "prettier": "3.6.2",
+    "prettier-plugin-space-before-function-paren": "0.0.8",
+    "roadroller": "2.1.0",
+    "vite": "7.1.2",
+    "vite-bundle-visualizer": "1.2.1",
+    "vite-plugin-babel": "1.3.2"
+  },
+  "prettier": "linter-config/prettier",
+  "scripts": {
+    "analyse": "cd src && vite-bundle-visualizer --config ../vite.config.mjs --template sunburst",
+    "dev": "vite --config ./vite.config.mjs src",
+    "build": "vite build --config ./vite.config.mjs src",
+    "format": "eslint . --fix && prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

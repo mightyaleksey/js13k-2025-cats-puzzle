@@ -1,0 +1,16 @@
+[ignore]
+<PROJECT_ROOT>/.vscode/.*
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+component_syntax=false
+emoji=true
+enums=false
+server.max_workers=2
+
+[strict]
