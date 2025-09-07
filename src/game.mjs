@@ -1,10 +1,20 @@
 /* @flow */
 
-import { createEngine, rect, setColor } from './engine.mjs'
+import './libs/random.mjs'
+
+import { createEngine } from './engine.mjs'
+import { GamePlayState } from './states/game/GamePlayState.mjs'
+import { StateMachine } from './states/StateMachine.mjs'
+import { StateStack } from './states/StateStack.mjs'
+
+const gameState = new StateStack()
+
+gameState.push(
+  new StateMachine({ play: () => new GamePlayState() }).change('play')
+)
 
 function renderGame () {
-  setColor('#00f')
-  rect('line', 50, 50, 20, 20)
+  gameState.render()
 }
 
 createEngine(null, null, renderGame)

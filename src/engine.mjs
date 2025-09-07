@@ -1,6 +1,6 @@
 /* @flow */
 
-import { emptyFunction } from './libs/emptyFunction.mjs'
+import emptyFunction from './libs/emptyFunction.mjs'
 
 const _frameRate = 60
 const _minFrameTime = 1 / _frameRate
@@ -67,15 +67,15 @@ export async function createEngine (
   document.body?.appendChild(_state.buffer)
   ; (function gameLoop(previousFrame: number) {
     const currentFrame = _getTime()
-    const elapsedTime = currentFrame - previousFrame
+    const delta = currentFrame - previousFrame
 
-    if (elapsedTime >= _maxFrameTime) {
+    if (delta >= _maxFrameTime) {
       // skip update if too much time passed
       previousFrame = currentFrame
-    } else if (elapsedTime >= _minFrameTime) {
+    } else if (delta >= _minFrameTime) {
       previousFrame = currentFrame
 
-      update(elapsedTime)
+      update(delta)
       _normalizeCanvas()
       _updateDimentions()
 

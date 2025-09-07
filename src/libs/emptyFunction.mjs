@@ -1,3 +1,3 @@
 /* @flow */
 
-export function emptyFunction () {}
+export default function emptyFunction () {}
