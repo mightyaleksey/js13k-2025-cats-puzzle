@@ -37,7 +37,7 @@ importers:
         version: 4.0.0
       linter-config:
         specifier: github:mightyaleksey/linter-config
-        version: https://codeload.github.com/mightyaleksey/linter-config/tar.gz/7ec2001840904977280826657e674d444c70ffbc(typescript@5.9.2)
+        version: https://codeload.github.com/mightyaleksey/linter-config/tar.gz/30088af5caa80e83d20578e75187b795badb08fc(typescript@5.9.2)
       posthtml:
         specifier: 0.16.6
         version: 0.16.6
@@ -1616,8 +1616,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  linter-config@https://codeload.github.com/mightyaleksey/linter-config/tar.gz/7ec2001840904977280826657e674d444c70ffbc:
-    resolution: {tarball: https://codeload.github.com/mightyaleksey/linter-config/tar.gz/7ec2001840904977280826657e674d444c70ffbc}
+  linter-config@https://codeload.github.com/mightyaleksey/linter-config/tar.gz/30088af5caa80e83d20578e75187b795badb08fc:
+    resolution: {tarball: https://codeload.github.com/mightyaleksey/linter-config/tar.gz/30088af5caa80e83d20578e75187b795badb08fc}
     version: 1.0.0
 
   load-json-file@1.1.0:
@@ -4241,7 +4241,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  linter-config@https://codeload.github.com/mightyaleksey/linter-config/tar.gz/7ec2001840904977280826657e674d444c70ffbc(typescript@5.9.2):
+  linter-config@https://codeload.github.com/mightyaleksey/linter-config/tar.gz/30088af5caa80e83d20578e75187b795badb08fc(typescript@5.9.2):
     dependencies:
       '@eslint/config-helpers': 0.3.1
       eslint: 9.33.0

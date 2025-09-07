@@ -10,11 +10,32 @@ const _state: { buffer: HTMLCanvasElement, context: CanvasRenderingContext2D } =
   // $FlowExpectedError[incompatible-type]
   { buffer: null, context: null }
 
+const _input: { touched: boolean, touches: { [string]: [number, number] } } = {
+  touched: false,
+  touches: {}
+}
+
 /**
  * Helper to check available space.
  * Returns virtual resolution.
  */
 export const Dimentions = { width: 0, height: 0 }
+
+export const Touch = {
+  getPosition (id?: ?string): ?[number, number] {
+    if (id == null) id = Object.keys(_input.touches)[0]
+    // $FlowExpectedError[incompatible-type]: missing null check
+    return _input.touches[id] ?? null
+  },
+
+  getTouches (): $ReadOnlyArray<string> {
+    return Object.keys(_input.touches)
+  },
+
+  wasTouched (): boolean {
+    return _input.touched
+  }
+}
 
 export function clear () {
   const b = _state.buffer
@@ -75,6 +96,7 @@ export async function createEngine (
     } else if (delta >= _minFrameTime) {
       previousFrame = currentFrame
 
+      // update game state
       update(delta)
       _normalizeCanvas()
       _updateDimentions()
@@ -84,12 +106,55 @@ export async function createEngine (
       _state.context.save()
       render()
       _state.context.restore()
+
+      _input.touched = false
     }
 
     window.requestAnimationFrame(() => {
       gameLoop(previousFrame)
     })
   })(_getTime())
+
+  document.addEventListener('click', onClick)
+  document.addEventListener('touchstart', onTouch)
+  document.addEventListener('touchmove', onTouch)
+  document.addEventListener('touchend', onTouchEnd)
+
+  function onClick (event: MouseEvent) {
+    _preventDefault(event)
+
+    if (event.button === 0) {
+      _input.touched = true
+      _input.touches.mouse = [event.pageX / _scale, event.pageY / _scale]
+    }
+  }
+
+  function onTouch (event: TouchEvent) {
+    _preventDefault(event)
+
+    _input.touched = true
+
+    for (let t = 0; t < event.changedTouches.length; t++) {
+      const touchEvent = event.changedTouches[t]
+      _input.touches[String(touchEvent.identifier)] = [
+        touchEvent.pageX / _scale,
+        touchEvent.pageY / _scale
+      ]
+    }
+  }
+
+  function onTouchEnd (event: TouchEvent) {
+    _preventDefault(event)
+
+    for (let t = 0; t < event.changedTouches.length; t++) {
+      const touchEvent = event.changedTouches[t]
+      delete _input.touches[String(touchEvent.identifier)]
+    }
+  }
+
+  function _preventDefault (event: UIEvent) {
+    event.preventDefault()
+  }
 }
 
 /**

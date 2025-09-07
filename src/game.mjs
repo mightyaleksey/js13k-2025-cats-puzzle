@@ -13,8 +13,12 @@ gameState.push(
   new StateMachine({ play: () => new GamePlayState() }).change('play')
 )
 
+function updateGame (delta: number) {
+  gameState.update(delta)
+}
+
 function renderGame () {
   gameState.render()
 }
 
-createEngine(null, null, renderGame)
+createEngine(null, updateGame, renderGame)

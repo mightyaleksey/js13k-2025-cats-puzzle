@@ -5,7 +5,7 @@ import assert from 'node:assert'
 import test from 'node:test'
 
 function genBoard (pieces) {
-  const board = new BoardState(pieces[0].length, pieces.length)
+  const board = new BoardState(pieces[0].length, pieces.length, 0)
   board.pieces = pieces.map((row, y) =>
     row.map((id, x) => (id != null ? new PieceState(x, y, id) : null)))
 
