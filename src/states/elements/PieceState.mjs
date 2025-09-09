@@ -45,4 +45,8 @@ export class PieceState extends BaseState {
   }
 
   update () {}
+
+  toJSON (): $ReadOnly<{ x: number, y: number, id: number }> {
+    return { x: this.x, y: this.y, id: this.id }
+  }
 }

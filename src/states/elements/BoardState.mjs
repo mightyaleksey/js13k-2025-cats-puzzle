@@ -15,6 +15,8 @@ const siblingCoords = [
 ]
 
 export class BoardState extends BaseState {
+  offsetX: number
+  offsetY: number
   maxIDs: number
   minMoves: number
 
@@ -28,6 +30,8 @@ export class BoardState extends BaseState {
     this.height = height ?? 5
     this.pieces = []
 
+    this.offsetX = 0
+    this.offsetY = 0
     this.maxIDs = 3
     this.minMoves = moves ?? 2
     this._genBoard()
@@ -37,8 +41,8 @@ export class BoardState extends BaseState {
     const { width, height } = Dimentions
     const w = this.width * PIECE_SIZE
     const h = this.height * PIECE_SIZE
-    const offsetX = 0.5 * (width - w)
-    const offsetY = 0.5 * (height - h)
+    const offsetX = (this.offsetX = 0.5 * (width - w))
+    const offsetY = (this.offsetY = 0.5 * (height - h))
     // render background
     setColor('#19A974')
     rect('fill', offsetX, offsetY, w, h, 2)
@@ -72,21 +76,6 @@ export class BoardState extends BaseState {
     )
 
     return [x, y]
-  }
-
-  swapPieces (left: [number, number], right: [number, number]) {
-    const leftTile = nullthrows(this._getTile(left[0], left[1], 0))
-    const rightTile = nullthrows(this._getTile(right[0], right[1], 0))
-
-    const x = leftTile.x
-    const y = leftTile.y
-    leftTile.x = rightTile.x
-    leftTile.y = rightTile.y
-    rightTile.x = x
-    rightTile.y = y
-
-    this.pieces[left[1]][left[0]] = rightTile
-    this.pieces[right[1]][right[0]] = leftTile
   }
 
   // mainly for debug (can be removed for production)
