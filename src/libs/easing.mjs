@@ -30,9 +30,15 @@
  *
  * t = time       should go from 0 to duration,
  * b = begin      value of the property being ease,
- * c = change     ending value of the property,
- * d = duration
+ * c = change     ending value of the property (change = ending - beginning),
+ * d = duration   total time.
  */
+
+export type EasingType = (t: number, b: number, c: number, d: number) => number
+
+export function linear (t: number, b: number, c: number, d: number): number {
+  return (c * t) / d + b
+}
 
 export function inCubic (t: number, b: number, c: number, d: number): number {
   t = t / d

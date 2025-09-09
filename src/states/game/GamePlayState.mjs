@@ -4,6 +4,7 @@ import { PIECE_SIZE } from '../../constants.mjs'
 import { rect, setColor, Touch } from '../../engine.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { BaseState } from '../BaseState.mjs'
+import { AnimationState } from '../elements/AnimationState.mjs'
 import { BoardState } from '../elements/BoardState.mjs'
 import type { PieceState } from '../elements/PieceState.mjs'
 
@@ -38,6 +39,7 @@ import type { PieceState } from '../elements/PieceState.mjs'
 
 export class GamePlayState extends BaseState {
   // state
+  animation: AnimationState
   cursor: [number, number]
   interactive: boolean
   selectedPiece: ?PieceState
@@ -45,6 +47,7 @@ export class GamePlayState extends BaseState {
   board: BoardState
 
   enter () {
+    this.animation = new AnimationState()
     this.cursor = [-1, -1]
     this.interactive = true
     this.selectedPiece = null
@@ -71,6 +74,7 @@ export class GamePlayState extends BaseState {
   }
 
   update (delta: number) {
+    this.animation.update(delta)
     this.board.update(delta)
 
     if (Touch.wasTouched()) {
@@ -100,7 +104,7 @@ export class GamePlayState extends BaseState {
     return matches.length > 0
   }
 
-  _handleInput () {
+  async _handleInput () {
     if (this.selectedPiece != null) {
       const deltaX = this.selectedPiece.x - this.cursor[0]
       const deltaY = this.selectedPiece.y - this.cursor[1]
@@ -112,7 +116,11 @@ export class GamePlayState extends BaseState {
       }
 
       const eligiblePositionForMove = Math.abs(deltaX) + Math.abs(deltaY) === 1
-      const targetPiece = this.board._getTile(this.cursor[0], this.cursor[1], 0)
+      const targetPiece = this.board._getPiece(
+        this.cursor[0],
+        this.cursor[1],
+        0
+      )
 
       if (
         targetPiece != null &&
@@ -120,15 +128,16 @@ export class GamePlayState extends BaseState {
         this._canMove(targetPiece)
       ) {
         // swap pieces
-        this._swapPieces(targetPiece)
+        await this._swapPieces(targetPiece)
+        await this._updateBoard()
       }
     } else {
-      const piece = this.board._getTile(this.cursor[0], this.cursor[1], 0)
+      const piece = this.board._getPiece(this.cursor[0], this.cursor[1], 0)
       this.selectedPiece = piece
     }
   }
 
-  _swapPieces (targetPiece: PieceState) {
+  async _swapPieces (targetPiece: PieceState) {
     const selectedPiece = nullthrows(this.selectedPiece)
     const pieces = this.board.pieces
 
@@ -145,5 +154,40 @@ export class GamePlayState extends BaseState {
     selectedPiece.y = tempY
 
     this.selectedPiece = null
+
+    await this.animation.tween(
+      [
+        [
+          selectedPiece,
+          {
+            clientX: selectedPiece.x * PIECE_SIZE,
+            clientY: selectedPiece.y * PIECE_SIZE
+          }
+        ],
+        [
+          targetPiece,
+          {
+            clientX: targetPiece.x * PIECE_SIZE,
+            clientY: targetPiece.y * PIECE_SIZE
+          }
+        ]
+      ],
+      { wait: 0.3 }
+    )
+  }
+
+  async _updateBoard () {
+    // remove matches
+    this.board._removePieces(this.board._getMatches())
+
+    // let pieces fall
+    const pieces = this.board._getFallingPieces()
+    await this.animation.tween(
+      pieces.map((piece) => [
+        piece,
+        { clientX: piece.x * PIECE_SIZE, clientY: piece.y * PIECE_SIZE }
+      ]),
+      { wait: 0.3 }
+    )
   }
 }

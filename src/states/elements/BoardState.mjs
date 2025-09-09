@@ -2,6 +2,7 @@
 
 import { PIECE_SIZE } from '../../constants.mjs'
 import { Dimentions, rect, setColor } from '../../engine.mjs'
+import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
 import { BaseState } from '../BaseState.mjs'
@@ -56,8 +57,6 @@ export class BoardState extends BaseState {
       }))
   }
 
-  update (delta: number) {}
-
   mapCoords (coords: ?[number, number]): ?[number, number] {
     if (coords == null) return null
 
@@ -100,6 +99,32 @@ export class BoardState extends BaseState {
     }
   }
 
+  _getFallingPieces (): $ReadOnlyArray<PieceState> {
+    // detect gaps and update coordinates of pieces to a new position
+    const pieces = this.pieces
+    const falling = []
+
+    for (let x = 0; x < this.width; ++x) {
+      let space = 0
+
+      for (let y = this.height - 1; y >= 0; --y) {
+        const piece = this._getPiece(x, y, 0)
+
+        if (piece == null) {
+          space++
+        } else if (space > 0) {
+          falling.push(piece)
+
+          piece.y += space
+          pieces[y + space][x] = piece
+          pieces[y][x] = null
+        }
+      }
+    }
+
+    return falling
+  }
+
   _getMatches (): $ReadOnlyArray<PieceState> {
     // check if we have horizontal or vertical sequence of 3 or more pieces
     const matches: Array<PieceState> = []
@@ -113,10 +138,10 @@ export class BoardState extends BaseState {
         // checks will invalide count (if tile does not match) and we need to get
         // at least 3 existing tiles in a row to add it to the list
         let counter = 1
-        let lastID = this._getTile(0, y, t)?.id
+        let lastID = this._getPiece(0, y, t)?.id
 
         for (let x = 1; x < mx; ++x) {
-          const tile = this._getTile(x, y, t)
+          const tile = this._getPiece(x, y, t)
 
           if (tile?.id === lastID) {
             counter++
@@ -126,12 +151,16 @@ export class BoardState extends BaseState {
           }
 
           if (counter === 3) {
-            matches.push(nullthrows(this._getTile(x - 2, y, t)))
-            matches.push(nullthrows(this._getTile(x - 1, y, t)))
+            matches.push(
+              nullthrows(this._getPiece(x - 2, y, t), NO_PIECE_FOUND)
+            )
+            matches.push(
+              nullthrows(this._getPiece(x - 1, y, t), NO_PIECE_FOUND)
+            )
           }
 
           if (counter >= 3) {
-            matches.push(nullthrows(tile))
+            matches.push(nullthrows(tile, NO_PIECE_FOUND))
           }
         }
       }
@@ -140,7 +169,7 @@ export class BoardState extends BaseState {
     return matches
   }
 
-  _getTile (x: number, y: number, transpose: number): ?PieceState {
+  _getPiece (x: number, y: number, transpose: number): ?PieceState {
     const ox = transpose === 0 ? x : y
     const oy = transpose === 0 ? y : x
 
@@ -155,10 +184,10 @@ export class BoardState extends BaseState {
     let moves = 0
 
     for (let y = 0; y < this.height; ++y) {
-      let lastID = this._getTile(0, y, 0)?.id
+      let lastID = this._getPiece(0, y, 0)?.id
 
       for (let x = 1; x < this.width; ++x) {
-        const tile = this._getTile(x, y, 0)
+        const tile = this._getPiece(x, y, 0)
 
         if (tile?.id === lastID) {
           if (
@@ -186,10 +215,16 @@ export class BoardState extends BaseState {
     let counter = 0
 
     siblingCoords.forEach((p) => {
-      const tile = this._getTile(p[0], p[1], 0)
+      const tile = this._getPiece(p[0], p[1], 0)
       if (tile?.id === id) counter++
     })
 
     return counter > 1
+  }
+
+  _removePieces (pieces: $ReadOnlyArray<PieceState>) {
+    pieces.forEach((piece) => {
+      this.pieces[piece.y][piece.x] = null
+    })
   }
 }

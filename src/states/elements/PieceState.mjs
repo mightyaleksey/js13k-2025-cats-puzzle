@@ -16,6 +16,8 @@ const colors = [
 
 export class PieceState extends BaseState {
   id: number
+  clientX: number
+  clientY: number
   offsetX: number
   offsetY: number
   x: number
@@ -27,6 +29,9 @@ export class PieceState extends BaseState {
     // virtual coordinates on the board
     this.x = x
     this.y = y
+
+    this.clientX = this.x * PIECE_SIZE
+    this.clientY = this.y * PIECE_SIZE
     // top left corner offset for rendering
     this.offsetX = 0
     this.offsetY = 0
@@ -36,15 +41,13 @@ export class PieceState extends BaseState {
     setColor(colors[this.id])
     rect(
       'fill',
-      this.offsetX + this.x * PIECE_SIZE + 1,
-      this.offsetY + this.y * PIECE_SIZE + 1,
+      this.offsetX + this.clientX + 1,
+      this.offsetY + this.clientY + 1,
       PIECE_SIZE - 2,
       PIECE_SIZE - 2,
       2
     )
   }
-
-  update () {}
 
   toJSON (): $ReadOnly<{ x: number, y: number, id: number }> {
     return { x: this.x, y: this.y, id: this.id }
