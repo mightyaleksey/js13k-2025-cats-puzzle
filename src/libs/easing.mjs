@@ -40,6 +40,11 @@ export function linear (t: number, b: number, c: number, d: number): number {
   return (c * t) / d + b
 }
 
+export function inQuad (t: number, b: number, c: number, d: number): number {
+  t = t / d
+  return c * t * t + b
+}
+
 export function inCubic (t: number, b: number, c: number, d: number): number {
   t = t / d
   return c * t * t * t + b
@@ -63,6 +68,10 @@ export function inOutCubic (
     t = t - 2
     return (c / 2) * (t * t * t + 2) + b
   }
+}
+
+export function inSine (t: number, b: number, c: number, d: number): number {
+  return -c * Math.cos((t / d) * (Math.PI / 2)) + c + b
 }
 
 export function inOutSine (t: number, b: number, c: number, d: number): number {

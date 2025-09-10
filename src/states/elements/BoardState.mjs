@@ -90,7 +90,7 @@ export class BoardState extends BaseState {
       pieces.push([])
 
       for (let x = 0; x < this.width; ++x) {
-        pieces[y].push(new PieceState(x, y, random(this.maxIDs)))
+        pieces[y].push(this._genPiece(x, y))
       }
     }
 
@@ -99,10 +99,10 @@ export class BoardState extends BaseState {
     }
   }
 
-  _getFallingPieces (): $ReadOnlyArray<PieceState> {
+  _getFallingPieces (): $ReadOnlyArray<?$ReadOnlyArray<PieceState>> {
     // detect gaps and update coordinates of pieces to a new position
     const pieces = this.pieces
-    const falling = []
+    const falling = Array(this.height + 1).fill(null)
 
     for (let x = 0; x < this.width; ++x) {
       let space = 0
@@ -113,16 +113,30 @@ export class BoardState extends BaseState {
         if (piece == null) {
           space++
         } else if (space > 0) {
-          falling.push(piece)
-
           piece.y += space
           pieces[y + space][x] = piece
           pieces[y][x] = null
+
+          if (falling[space] == null) falling[space] = []
+          falling[space].push(piece)
         }
+      }
+
+      for (let k = 0; k < space; ++k) {
+        const piece = this._genPiece(x, k)
+        piece.clientY -= space * PIECE_SIZE
+        pieces[piece.y][piece.x] = piece
+
+        if (falling[space] == null) falling[space] = []
+        falling[space].push(piece)
       }
     }
 
     return falling
+  }
+
+  _genPiece (x: number, y: number): PieceState {
+    return new PieceState(x, y, random(this.maxIDs))
   }
 
   _getMatches (): $ReadOnlyArray<PieceState> {

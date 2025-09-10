@@ -7,19 +7,25 @@ import { NO_PROP_FOUND } from '../../libs/error.mjs'
 import { BaseState } from '../BaseState.mjs'
 
 export class AnimationState extends BaseState {
-  done: () => void
   duration: number
   time: number
+
   easing: EasingType
-  props: Array<[{ ... }, string, number, number]>
+  props: Array<[{ ... }, string, number, number, number]>
+
+  done: () => void
+  promise: ?Promise<void>
 
   constructor () {
     super()
-    this.done = emptyFunction
     this.duration = 0
+    this.time = 0
+
     this.easing = linear
     this.props = []
-    this.time = 0
+
+    this.done = emptyFunction
+    this.promise = null
   }
 
   update (dt: number) {
@@ -28,7 +34,7 @@ export class AnimationState extends BaseState {
 
     this.props.forEach((d) => {
       // $FlowExpectedError[prop-missing]
-      d[0][d[1]] = this.easing(this.time, d[2], d[3], this.duration)
+      d[0][d[1]] = this.easing(Math.min(this.time, d[4]), d[2], d[3], d[4])
     })
 
     if (this.time === this.duration) {
@@ -37,6 +43,7 @@ export class AnimationState extends BaseState {
       this.props.length = 0
       this.done()
       this.done = emptyFunction
+      this.promise = null
     }
   }
 
@@ -47,7 +54,7 @@ export class AnimationState extends BaseState {
     definitions: $ReadOnlyArray<[T, { [$Keys<T>]: number }]>,
     params: { easing?: EasingType, wait: number }
   ): Promise<void> {
-    this.duration = params.wait
+    this.duration = Math.max(params.wait, this.duration)
     this.easing = params.easing ?? linear
     this.time = 0
 
@@ -63,12 +70,17 @@ export class AnimationState extends BaseState {
         const change = props[key] - target[key]
         // $FlowFixMe[incompatible-call]
         // $FlowFixMe[not-an-object]
-        this.props.push([target, key, target[key], change])
+        this.props.push([target, key, target[key], change, this.duration])
       })
     })
 
-    return new Promise((resolve) => {
+    return this._genPromise()
+  }
+
+  _genPromise (): Promise<void> {
+    if (this.promise != null) return this.promise
+    return (this.promise = new Promise((resolve) => {
       this.done = resolve
-    })
+    }))
   }
 }

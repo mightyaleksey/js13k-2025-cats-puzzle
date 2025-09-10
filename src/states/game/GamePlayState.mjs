@@ -1,7 +1,13 @@
 /* @flow */
 
-import { PIECE_SIZE } from '../../constants.mjs'
+import {
+  PIECE_SIZE,
+  T_MACRO_DURATION,
+  T_MICRO_DURATION
+} from '../../constants.mjs'
 import { rect, setColor, Touch } from '../../engine.mjs'
+import delay from '../../libs/delay.mjs'
+import { inOutCubic } from '../../libs/easing.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { BaseState } from '../BaseState.mjs'
 import { AnimationState } from '../elements/AnimationState.mjs'
@@ -172,22 +178,29 @@ export class GamePlayState extends BaseState {
           }
         ]
       ],
-      { wait: 0.3 }
+      { easing: inOutCubic, wait: T_MACRO_DURATION }
     )
   }
 
   async _updateBoard () {
-    // remove matches
-    this.board._removePieces(this.board._getMatches())
+    let matches = this.board._getMatches()
+    while (matches.length > 0) {
+      // remove matches
+      this.board._removePieces(matches)
+      await delay(0.5 * T_MICRO_DURATION)
 
-    // let pieces fall
-    const pieces = this.board._getFallingPieces()
-    await this.animation.tween(
-      pieces.map((piece) => [
-        piece,
-        { clientX: piece.x * PIECE_SIZE, clientY: piece.y * PIECE_SIZE }
-      ]),
-      { wait: 0.3 }
-    )
+      // let pieces fall
+      const fallingPieces = this.board._getFallingPieces()
+      // $FlowFixMe[incompatible-call]
+      await fallingPieces.reduce((promise, pieces, space) => {
+        if (pieces == null) return promise
+        return this.animation.tween(
+          pieces.map((piece) => [piece, { clientY: piece.y * PIECE_SIZE }]),
+          { wait: space * T_MICRO_DURATION * 2 }
+        )
+      }, null)
+
+      matches = this.board._getMatches()
+    }
   }
 }
