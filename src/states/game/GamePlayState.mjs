@@ -9,6 +9,7 @@ import { rect, setColor, Touch } from '../../engine.mjs'
 import delay from '../../libs/delay.mjs'
 import { inOutCubic } from '../../libs/easing.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
+import { playSound } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
 import { AnimationState } from '../elements/AnimationState.mjs'
 import { BoardState } from '../elements/BoardState.mjs'
@@ -187,6 +188,7 @@ export class GamePlayState extends BaseState {
     while (matches.length > 0) {
       // remove matches
       this.board._removePieces(matches)
+      playSound('match')
       await delay(0.5 * T_MICRO_DURATION)
 
       // let pieces fall
@@ -199,6 +201,7 @@ export class GamePlayState extends BaseState {
           { wait: space * T_MICRO_DURATION * 2 }
         )
       }, null)
+      playSound('fall')
 
       matches = this.board._getMatches()
     }
