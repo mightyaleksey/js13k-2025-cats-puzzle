@@ -129,17 +129,22 @@ export class GamePlayState extends BaseState {
         0
       )
 
-      if (
-        targetPiece != null &&
-        eligiblePositionForMove &&
-        this._canMove(targetPiece)
-      ) {
-        // swap pieces
-        await this._swapPieces(targetPiece)
-        await this._updateBoard()
+      if (targetPiece != null) {
+        if (eligiblePositionForMove && this._canMove(targetPiece)) {
+          // swap pieces
+          await this._swapPieces(targetPiece)
+          await this._updateBoard()
+        } else {
+          playSound('selection')
+          this.selectedPiece = targetPiece
+        }
       }
     } else {
       const piece = this.board._getPiece(this.cursor[0], this.cursor[1], 0)
+      if (piece != null) {
+        playSound('selection')
+      }
+
       this.selectedPiece = piece
     }
   }
@@ -192,6 +197,7 @@ export class GamePlayState extends BaseState {
     while (matches.length > 0) {
       // remove matches
       this.board._removePieces(matches)
+
       playSound('match')
       await delay(0.5 * T_MICRO_DURATION)
 
@@ -205,7 +211,6 @@ export class GamePlayState extends BaseState {
           { wait: space * T_MICRO_DURATION * 2 }
         )
       }, null)
-      playSound('fall')
 
       matches = this.board._getMatches()
     }
