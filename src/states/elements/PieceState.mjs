@@ -2,7 +2,7 @@
 
 import { PIECE_SIZE } from '../../constants.mjs'
 import { rect, setColor } from '../../engine.mjs'
-import { BaseState } from '../BaseState.mjs'
+import { ObjectState } from './ObjectState.mjs'
 
 const colors = [
   '#FF6300',
@@ -14,7 +14,7 @@ const colors = [
   '#001B44'
 ]
 
-export class PieceState extends BaseState {
+export class PieceState extends ObjectState {
   id: number
   clientX: number
   clientY: number
@@ -26,30 +26,39 @@ export class PieceState extends BaseState {
   constructor (x: number, y: number, id: number) {
     super()
     this.id = id
+    // global offset helps to compensate canvas origin shift
+    this.clientX = 0
+    this.clientY = 0
+    // offset related to the board based on virtual coordinates
+    this.offsetX = 0
+    this.offsetY = 0
     // virtual coordinates on the board
     this.x = x
     this.y = y
 
-    this.clientX = this.x * PIECE_SIZE
-    this.clientY = this.y * PIECE_SIZE
-    // top left corner offset for rendering
-    this.offsetX = 0
-    this.offsetY = 0
+    this.width = PIECE_SIZE
+    this.height = PIECE_SIZE
+    this._updateOffset()
   }
 
   render () {
     setColor(colors[this.id])
     rect(
       'fill',
-      this.offsetX + this.clientX + 1,
-      this.offsetY + this.clientY + 1,
-      PIECE_SIZE - 2,
-      PIECE_SIZE - 2,
+      this.clientX + this.pageX + this.offsetX + 1,
+      this.clientY + this.pageY + this.offsetY + 1,
+      this.width - 2,
+      this.height - 2,
       2
     )
   }
 
   toJSON (): $ReadOnly<{ x: number, y: number, id: number }> {
     return { x: this.x, y: this.y, id: this.id }
+  }
+
+  _updateOffset () {
+    this.offsetX = this.x * this.width
+    this.offsetY = this.y * this.height
   }
 }

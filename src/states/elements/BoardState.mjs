@@ -1,137 +1,143 @@
 /* @flow */
 
-import { PIECE_SIZE } from '../../constants.mjs'
-import { Dimentions, rect, rotate, setColor, translate } from '../../engine.mjs'
+import { PIECE_SIZE, SIBLING_PIECE_COORDS } from '../../constants.mjs'
+import { rect, rotate, setColor, translate } from '../../engine.mjs'
 import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
-import { BaseState } from '../BaseState.mjs'
+import { RotatingObjectState } from './ObjectState.mjs'
 import { PieceState } from './PieceState.mjs'
+import { SelectionState } from './SelectionState.mjs'
 
-const siblingCoords = [
-  [-1, 0],
-  [1, 0],
-  [0, -1],
-  [0, 1]
-]
+export class BoardState extends RotatingObjectState {
+  // challenge
+  expectedIDs: number
+  expectedMoves: number
 
-export class BoardState extends BaseState {
-  offsetX: number
-  offsetY: number
-  maxIDs: number
-  minMoves: number
+  columns: number
+  rows: number
+  table: Array<Array<?PieceState>>
 
-  width: number
-  height: number
-  pieces: Array<Array<?PieceState>>
+  selection: SelectionState
 
-  constructor (width?: number, height?: number, moves?: number) {
+  constructor (columns?: number, rows?: number, ids?: number, moves?: number) {
     super()
-    this.width = width ?? 5
-    this.height = height ?? 5
-    this.pieces = []
 
-    this.offsetX = 0
-    this.offsetY = 0
-    this.maxIDs = 3
-    this.minMoves = moves ?? 2
-    this._genBoard()
+    // challenge
+    this.expectedIDs = ids ?? 3
+    this.expectedMoves = moves ?? 2
+
+    this.columns = columns ?? 5
+    this.rows = rows ?? 5
+    this.table = []
+
+    this.selection = new SelectionState()
+
+    this.width = this.columns * PIECE_SIZE
+    this.height = this.rows * PIECE_SIZE
   }
 
   render () {
-    const { width, height } = Dimentions
-    const w = this.width * PIECE_SIZE
-    const h = this.height * PIECE_SIZE
-    const offsetX = (this.offsetX = 0.5 * (width - w))
-    const offsetY = (this.offsetY = 0.5 * (height - h))
-    // render background
-    setColor('#19A974')
-    rect('fill', offsetX, offsetY, w, h, 2)
+    const pageX = this.clientX + this.pageX
+    const pageY = this.clientY + this.pageY
+    const width = this.columns * PIECE_SIZE
+    const height = this.rows * PIECE_SIZE
 
-    this.pieces.forEach((row) =>
+    if (this.angle > 0) {
+      translate(-this.clientX, -this.clientY)
+      rotate(this.angle)
+    }
+
+    setColor('#19A974')
+    rect('fill', pageX, pageY, width, height, 2)
+
+    this.table.forEach((row) =>
       row.forEach((piece) => {
-        if (piece == null) return
-        piece.offsetX = offsetX
-        piece.offsetY = offsetY
-        piece.render()
+        if (piece != null) {
+          piece.clientX = this.clientX
+          piece.clientY = this.clientY
+          piece.render()
+        }
       }))
+
+    this.selection.render()
+    // todo restore
   }
 
-  mapCoords (coords: ?[number, number]): ?[number, number] {
-    if (coords == null) return null
-
-    const { width, height } = Dimentions
-    const offsetX = 0.5 * (width - this.width * PIECE_SIZE)
-    const offsetY = 0.5 * (height - this.height * PIECE_SIZE)
-
-    // todo check borders
-    const x = Math.min(
-      Math.floor(Math.max(coords[0] - offsetX, 0) / PIECE_SIZE),
-      this.width
-    )
-    const y = Math.min(
-      Math.floor(Math.max(coords[1] - offsetY, 0) / PIECE_SIZE),
-      this.height
-    )
-
-    return [x, y]
+  update (delta: number) {
+    this.selection.update(delta)
   }
 
   // mainly for debug (can be removed for production)
   toJSON (): $ReadOnlyArray<$ReadOnlyArray<?number>> {
-    return this.pieces.map((row) => row.map((piece) => piece?.id ?? null))
-  }
-
-  transpose () {
-    const transposed: Array<Array<?PieceState>> = Array(this.width)
-      .fill()
-      .map(() => Array(this.height))
-
-    for (let x = 0; x < this.width; ++x) {
-      for (let y = 0; y < this.height; ++y) {
-        const tx = this.height - 1 - y
-        const piece = this._getPiece(x, y, 0)
-        if (piece != null) {
-          piece.x = tx
-          piece.y = x
-        }
-
-        transposed[x][tx] = piece
-      }
-    }
-
-    const width = this.width
-    this.width = this.height
-    this.height = width
-    this.pieces = transposed
+    return this.table.map((row) => row.map((piece) => piece?.id ?? null))
   }
 
   _genBoard () {
-    const pieces = (this.pieces = [])
+    const table = this.table
+    table.length = 0
 
-    for (let y = 0; y < this.height; ++y) {
-      // create empty row
-      pieces.push([])
-
-      for (let x = 0; x < this.width; ++x) {
-        pieces[y].push(this._genPiece(x, y))
+    for (let y = 0; y < this.rows; ++y) {
+      table.push([])
+      for (let x = 0; x < this.columns; ++x) {
+        table[y].push(this._genPiece(x, y))
       }
     }
 
-    while (this._getMatches().length > 0 || !this._hasMoves(this.minMoves)) {
+    while (this._getMatches().length > 0 || !this._hasMoves()) {
       this._genBoard()
     }
   }
 
+  _genPiece (x: number, y: number): PieceState {
+    const piece = new PieceState(x, y, random(this.expectedIDs))
+    piece.pageX = this.pageX
+    piece.pageY = this.pageY
+    return piece
+  }
+
+  _getPiece (x: number, y: number, transpose: number): ?PieceState {
+    const ox = transpose === 0 ? x : y
+    const oy = transpose === 0 ? y : x
+
+    if (ox < 0 || ox >= this.columns || oy < 0 || oy >= this.rows) {
+      return null
+    }
+
+    return this.table[oy][ox]
+  }
+
+  _hasPiece (x: number, y: number): boolean {
+    return this._getPiece(x, y, 0) != null
+  }
+
+  _removePieces (pieces: $ReadOnlyArray<PieceState>) {
+    pieces.forEach((piece) => {
+      this.table[piece.y][piece.x] = null
+    })
+  }
+
+  _clearSelection () {
+    this.selection.target = null
+  }
+
+  _getSelection (): ?PieceState {
+    return this.selection.target
+  }
+
+  _updateSelection (x: number, y: number) {
+    this.selection.target = this._getPiece(x, y, 0)
+  }
+
   _getFallingPieces (): $ReadOnlyArray<?$ReadOnlyArray<PieceState>> {
     // detect gaps and update coordinates of pieces to a new position
-    const pieces = this.pieces
-    const falling = Array(this.height + 1).fill(null)
+    const pieces = this.table
+    const falling = Array(this.rows + 1).fill(null)
 
-    for (let x = 0; x < this.width; ++x) {
+    for (let x = 0; x < this.columns; ++x) {
       let space = 0
 
-      for (let y = this.height - 1; y >= 0; --y) {
+      for (let y = this.rows - 1; y >= 0; --y) {
         const piece = this._getPiece(x, y, 0)
 
         if (piece == null) {
@@ -148,7 +154,7 @@ export class BoardState extends BaseState {
 
       for (let k = 0; k < space; ++k) {
         const piece = this._genPiece(x, k)
-        piece.clientY -= space * PIECE_SIZE
+        piece.offsetY -= space * PIECE_SIZE
         pieces[piece.y][piece.x] = piece
 
         if (falling[space] == null) falling[space] = []
@@ -159,17 +165,13 @@ export class BoardState extends BaseState {
     return falling
   }
 
-  _genPiece (x: number, y: number): PieceState {
-    return new PieceState(x, y, random(this.maxIDs))
-  }
-
   _getMatches (): $ReadOnlyArray<PieceState> {
     // check if we have horizontal or vertical sequence of 3 or more pieces
     const matches: Array<PieceState> = []
 
     for (let t = 0; t < 2; ++t) {
-      const my = t === 0 ? this.height : this.width
-      const mx = t === 0 ? this.width : this.height
+      const my = t === 0 ? this.rows : this.columns
+      const mx = t === 0 ? this.columns : this.rows
 
       for (let y = 0; y < my; ++y) {
         // ideally we should check if tile is available, however, subsequent tile
@@ -207,24 +209,13 @@ export class BoardState extends BaseState {
     return matches
   }
 
-  _getPiece (x: number, y: number, transpose: number): ?PieceState {
-    const ox = transpose === 0 ? x : y
-    const oy = transpose === 0 ? y : x
-
-    if (ox < 0 || ox >= this.width || oy < 0 || oy >= this.height) {
-      return null
-    }
-
-    return this.pieces[oy][ox]
-  }
-
-  _hasMoves (minMoves: number): boolean {
+  _hasMoves (): boolean {
     let moves = 0
 
-    for (let y = 0; y < this.height; ++y) {
+    for (let y = 0; y < this.rows; ++y) {
       let lastID = this._getPiece(0, y, 0)?.id
 
-      for (let x = 1; x < this.width; ++x) {
+      for (let x = 1; x < this.columns; ++x) {
         const tile = this._getPiece(x, y, 0)
 
         if (tile?.id === lastID) {
@@ -235,7 +226,7 @@ export class BoardState extends BaseState {
             moves++
           }
 
-          if (moves === minMoves) {
+          if (moves === this.expectedMoves) {
             return true
           }
         } else {
@@ -252,7 +243,7 @@ export class BoardState extends BaseState {
     // we need to check that we have at least two pieces of matching ID
     let counter = 0
 
-    siblingCoords.forEach((p) => {
+    SIBLING_PIECE_COORDS.forEach((p) => {
       const tile = this._getPiece(p[0], p[1], 0)
       if (tile?.id === id) counter++
     })
@@ -260,9 +251,19 @@ export class BoardState extends BaseState {
     return counter > 1
   }
 
-  _removePieces (pieces: $ReadOnlyArray<PieceState>) {
-    pieces.forEach((piece) => {
-      this.pieces[piece.y][piece.x] = null
-    })
+  _toVirtualCoords (coords: ?[number, number]): ?[number, number] {
+    if (coords == null) return null
+
+    // todo check borders
+    const x = Math.min(
+      Math.floor(Math.max(coords[0] - this.pageX, 0) / PIECE_SIZE),
+      this.columns
+    )
+    const y = Math.min(
+      Math.floor(Math.max(coords[1] - this.pageY, 0) / PIECE_SIZE),
+      this.rows
+    )
+
+    return [x, y]
   }
 }

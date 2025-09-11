@@ -5,13 +5,13 @@ import {
   T_MACRO_DURATION,
   T_MICRO_DURATION
 } from '../../constants.mjs'
-import { rect, setColor, Touch } from '../../engine.mjs'
+import { Dimentions, Touch } from '../../engine.mjs'
 import delay from '../../libs/delay.mjs'
 import { inOutCubic } from '../../libs/easing.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
+import { tween } from '../../libs/timer.mjs'
 import { playSound } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
-import { AnimationState } from '../elements/AnimationState.mjs'
 import { BoardState } from '../elements/BoardState.mjs'
 import type { PieceState } from '../elements/PieceState.mjs'
 
@@ -46,46 +46,30 @@ import type { PieceState } from '../elements/PieceState.mjs'
 
 export class GamePlayState extends BaseState {
   // state
-  animation: AnimationState
   cursor: [number, number]
   interactive: boolean
-  selectedPiece: ?PieceState
   // elements
   board: BoardState
 
   enter () {
-    this.animation = new AnimationState()
     this.cursor = [-1, -1]
     this.interactive = true
-    this.selectedPiece = null
 
-    this.board = new BoardState()
+    const board = (this.board = new BoardState())
+    board.pageX = 0.5 * (Dimentions.width - board.width)
+    board.pageY = 0.5 * (Dimentions.height - board.height)
+    board._genBoard()
   }
 
   render () {
     this.board.render()
-
-    // render selection
-    const selectedPiece = this.selectedPiece
-    if (selectedPiece != null) {
-      setColor('#E7040F')
-      rect(
-        'line',
-        this.board.offsetX + selectedPiece.x * PIECE_SIZE,
-        this.board.offsetY + selectedPiece.y * PIECE_SIZE,
-        PIECE_SIZE,
-        PIECE_SIZE,
-        2
-      )
-    }
   }
 
   update (delta: number) {
-    this.animation.update(delta)
     this.board.update(delta)
 
-    if (Touch.wasTouched()) {
-      const cursor = this.board.mapCoords(Touch.getPosition())
+    if (this.interactive && Touch.wasTouched()) {
+      const cursor = this.board._toVirtualCoords(Touch.getPosition())
 
       if (cursor != null) {
         this.cursor[0] = cursor[0]
@@ -97,8 +81,8 @@ export class GamePlayState extends BaseState {
 
   _canMove (targetPiece: PieceState): boolean {
     // check matches after changing pieces position
-    const selectedPiece = nullthrows(this.selectedPiece)
-    const pieces = this.board.pieces
+    const selectedPiece = nullthrows(this.board._getSelection())
+    const pieces = this.board.table
     // temporary update board matrix
     pieces[targetPiece.y][targetPiece.x] = selectedPiece
     pieces[selectedPiece.y][selectedPiece.x] = targetPiece
@@ -112,50 +96,45 @@ export class GamePlayState extends BaseState {
   }
 
   async _handleInput () {
-    if (this.selectedPiece != null) {
-      const deltaX = this.selectedPiece.x - this.cursor[0]
-      const deltaY = this.selectedPiece.y - this.cursor[1]
+    const board = this.board
+    const selectedPiece = board._getSelection()
+
+    if (selectedPiece != null) {
+      const deltaX = selectedPiece.x - this.cursor[0]
+      const deltaY = selectedPiece.y - this.cursor[1]
 
       if (deltaX === 0 && deltaY === 0) {
         // reset selection
-        this.selectedPiece = null
+        board._clearSelection()
         return
       }
 
       const eligiblePositionForMove = Math.abs(deltaX) + Math.abs(deltaY) === 1
-      const targetPiece = this.board._getPiece(
-        this.cursor[0],
-        this.cursor[1],
-        0
-      )
+      const targetPiece = board._getPiece(this.cursor[0], this.cursor[1], 0)
 
       if (targetPiece != null) {
         if (eligiblePositionForMove && this._canMove(targetPiece)) {
           // swap pieces
+          this.interactive = false
           await this._swapPieces(targetPiece)
           await this._updateBoard()
+          this.interactive = true
         } else {
           playSound('selection')
-          this.selectedPiece = targetPiece
+          board.selection.target = targetPiece
         }
       }
     } else {
-      const piece = this.board._getPiece(this.cursor[0], this.cursor[1], 0)
-      if (piece != null) {
+      board._updateSelection(this.cursor[0], this.cursor[1])
+      if (board._hasPiece(this.cursor[0], this.cursor[1])) {
         playSound('selection')
       }
-
-      this.selectedPiece = piece
     }
   }
 
-  _rotateBoard () {
-    this.board.transpose()
-  }
-
   async _swapPieces (targetPiece: PieceState) {
-    const selectedPiece = nullthrows(this.selectedPiece)
-    const pieces = this.board.pieces
+    const selectedPiece = nullthrows(this.board._getSelection())
+    const pieces = this.board.table
 
     // swap pieces
     pieces[targetPiece.y][targetPiece.x] = selectedPiece
@@ -169,26 +148,28 @@ export class GamePlayState extends BaseState {
     selectedPiece.x = tempX
     selectedPiece.y = tempY
 
-    this.selectedPiece = null
+    // reset
+    this.board._updateSelection(-1, -1)
 
-    await this.animation.tween(
+    await tween(
       [
         [
           selectedPiece,
           {
-            clientX: selectedPiece.x * PIECE_SIZE,
-            clientY: selectedPiece.y * PIECE_SIZE
+            offsetX: selectedPiece.x * PIECE_SIZE,
+            offsetY: selectedPiece.y * PIECE_SIZE
           }
         ],
         [
           targetPiece,
           {
-            clientX: targetPiece.x * PIECE_SIZE,
-            clientY: targetPiece.y * PIECE_SIZE
+            offsetX: targetPiece.x * PIECE_SIZE,
+            offsetY: targetPiece.y * PIECE_SIZE
           }
         ]
       ],
-      { easing: inOutCubic, wait: T_MACRO_DURATION }
+      T_MACRO_DURATION,
+      inOutCubic
     )
   }
 
@@ -206,9 +187,10 @@ export class GamePlayState extends BaseState {
       // $FlowFixMe[incompatible-call]
       await fallingPieces.reduce((promise, pieces, space) => {
         if (pieces == null) return promise
-        return this.animation.tween(
-          pieces.map((piece) => [piece, { clientY: piece.y * PIECE_SIZE }]),
-          { wait: space * T_MICRO_DURATION * 2 }
+
+        return tween(
+          pieces.map((piece) => [piece, { offsetY: piece.y * PIECE_SIZE }]),
+          space * T_MICRO_DURATION * 2
         )
       }, null)
 
