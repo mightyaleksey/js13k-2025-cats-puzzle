@@ -16,6 +16,12 @@ const _input: { touched: boolean, touches: { [string]: [number, number] } } = {
 }
 
 /**
+ * Shared type for the mode argument to be used
+ * for various shapes drawing
+ */
+type DrawMode = 'fill' | 'line'
+
+/**
  * Helper to check available space.
  * Returns virtual resolution.
  */
@@ -43,8 +49,29 @@ export function clear () {
   c.clearRect(0, 0, b.width, b.height)
 }
 
+export function circle (mode: DrawMode, x: number, y: number, radius: number) {
+  const c = _state.context
+  c.beginPath()
+  c.arc(x, y, radius, 0, 2 * Math.PI)
+  mode === 'fill' ? c.fill() : c.stroke()
+}
+
+export function ellipse (
+  mode: DrawMode,
+  x: number,
+  y: number,
+  radiusX: number,
+  radiusY: number,
+  rotation: number
+) {
+  const c = _state.context
+  c.beginPath()
+  c.ellipse(x, y, radiusX, radiusY, (rotation * Math.PI) / 180, 0, 2 * Math.PI)
+  mode === 'fill' ? c.fill() : c.stroke()
+}
+
 export function rect (
-  mode: 'fill' | 'line',
+  mode: DrawMode,
   x: number,
   y: number,
   width: number,
