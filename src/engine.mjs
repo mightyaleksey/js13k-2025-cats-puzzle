@@ -70,6 +70,14 @@ export function ellipse (
   mode === 'fill' ? c.fill() : c.stroke()
 }
 
+export function line (x0: number, y0: number, x1: number, y1: number) {
+  const c = _state.context
+  c.beginPath()
+  c.moveTo(x0, y0)
+  c.lineTo(x1, y1)
+  c.stroke()
+}
+
 export function rect (
   mode: DrawMode,
   x: number,
@@ -99,6 +107,11 @@ export function setColor (color: string, opacity?: number) {
   const c = _state.context
   c.fillStyle = color
   c.strokeStyle = color
+}
+
+export function setLine (width: number) {
+  const c = _state.context
+  c.lineWidth = width
 }
 
 export function translate (dx: number, dy: number) {

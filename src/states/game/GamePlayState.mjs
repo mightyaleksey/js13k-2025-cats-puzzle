@@ -12,6 +12,7 @@ import nullthrows from '../../libs/nullthrows.mjs'
 import { tween } from '../../libs/timer.mjs'
 import { playSound } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
+import { BgState } from '../elements/BgState'
 import { BoardState } from '../elements/BoardState.mjs'
 import type { PieceState } from '../elements/PieceState.mjs'
 
@@ -49,12 +50,14 @@ export class GamePlayState extends BaseState {
   cursor: [number, number]
   interactive: boolean
   // elements
+  bg: BgState
   board: BoardState
 
   enter () {
     this.cursor = [-1, -1]
     this.interactive = true
 
+    this.bg = new BgState()
     const board = (this.board = new BoardState())
     board.pageX = 0.5 * (Dimentions.width - board.width)
     board.pageY = 0.5 * (Dimentions.height - board.height)
@@ -62,6 +65,7 @@ export class GamePlayState extends BaseState {
   }
 
   render () {
+    this.bg.render()
     this.board.render()
   }
 
