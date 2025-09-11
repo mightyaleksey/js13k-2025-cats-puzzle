@@ -35,7 +35,7 @@ export default defineConfig((props) => {
           assetsInlineLimit: 800,
           minify: true,
           modulePreload: { polyfill: false },
-          outDir: resolve(__dirname, 'dist'),
+          outDir: resolve(__dirname, 'docs'),
           target: 'es2020',
           emptyOutDir: true,
           rollupOptions: {

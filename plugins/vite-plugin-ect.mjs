@@ -11,7 +11,7 @@ export function ectPlugin () {
       // we can ignore those
       const embeddedFiles = Object.values(bundle).map((asset) => asset.fileName)
 
-      const files = await fs.promises.readdir('dist/')
+      const files = await fs.promises.readdir('docs/')
       const assetFiles = files
         .filter(
           (file) =>
@@ -19,20 +19,20 @@ export function ectPlugin () {
             !file.endsWith('.html') &&
             !file.endsWith('.zip')
         )
-        .map((file) => `dist/${file}`)
+        .map((file) => `docs/${file}`)
 
       const args = [
         '-strip',
         '-zip',
         '-10009',
-        'dist/index.html',
+        'docs/index.html',
         ...assetFiles
       ]
 
       // ect provides a path to the binary file
       const result = execFileSync(ectPath, args)
       console.log(result.toString().trim())
-      const stats = await fs.promises.stat('dist/index.zip')
+      const stats = await fs.promises.stat('docs/index.zip')
       console.log('Zip size', stats.size)
     }
   }
