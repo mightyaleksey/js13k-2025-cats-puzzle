@@ -1,7 +1,7 @@
 /* @flow */
 
 import { PIECE_SIZE } from '../../constants.mjs'
-import { Dimentions, rect, setColor } from '../../engine.mjs'
+import { Dimentions, rect, rotate, setColor, translate } from '../../engine.mjs'
 import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
@@ -80,6 +80,30 @@ export class BoardState extends BaseState {
   // mainly for debug (can be removed for production)
   toJSON (): $ReadOnlyArray<$ReadOnlyArray<?number>> {
     return this.pieces.map((row) => row.map((piece) => piece?.id ?? null))
+  }
+
+  transpose () {
+    const transposed: Array<Array<?PieceState>> = Array(this.width)
+      .fill()
+      .map(() => Array(this.height))
+
+    for (let x = 0; x < this.width; ++x) {
+      for (let y = 0; y < this.height; ++y) {
+        const tx = this.height - 1 - y
+        const piece = this._getPiece(x, y, 0)
+        if (piece != null) {
+          piece.x = tx
+          piece.y = x
+        }
+
+        transposed[x][tx] = piece
+      }
+    }
+
+    const width = this.width
+    this.width = this.height
+    this.height = width
+    this.pieces = transposed
   }
 
   _genBoard () {

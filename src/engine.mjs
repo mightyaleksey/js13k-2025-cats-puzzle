@@ -63,10 +63,20 @@ export function rect (
   mode === 'fill' ? c.fill() : c.stroke()
 }
 
+export function rotate (degree: number) {
+  const c = _state.context
+  c.rotate((degree * Math.PI) / 180)
+}
+
 export function setColor (color: string, opacity?: number) {
   const c = _state.context
   c.fillStyle = color
   c.strokeStyle = color
+}
+
+export function translate (dx: number, dy: number) {
+  const c = _state.context
+  c.translate(Math.floor(dx), Math.floor(dy))
 }
 
 export async function createEngine (

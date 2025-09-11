@@ -144,6 +144,10 @@ export class GamePlayState extends BaseState {
     }
   }
 
+  _rotateBoard () {
+    this.board.transpose()
+  }
+
   async _swapPieces (targetPiece: PieceState) {
     const selectedPiece = nullthrows(this.selectedPiece)
     const pieces = this.board.pieces
