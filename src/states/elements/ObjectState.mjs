@@ -1,5 +1,6 @@
 /* @flow */
 
+import { rotate, translate } from '../../engine.mjs'
 import { BaseState } from '../BaseState.mjs'
 
 export class ObjectState extends BaseState {
@@ -35,9 +36,16 @@ export class RotatingObjectState extends ObjectState {
     this.clientY = 0
   }
 
+  render () {
+    if (this.angle > 0) {
+      translate(-this.clientX, -this.clientY)
+      rotate(this.angle)
+    }
+  }
+
   update (delta: number) {
     const angle = this.angle
-    this.clientX = angle > 0 ? -(this.pageX + 0.5 * this.width) : 0
-    this.clientY = angle > 0 ? -(this.pageY + 0.5 * this.height) : 0
+    this.clientX = angle !== 0 ? -(this.pageX + 0.5 * this.width) : 0
+    this.clientY = angle !== 0 ? -(this.pageY + 0.5 * this.height) : 0
   }
 }

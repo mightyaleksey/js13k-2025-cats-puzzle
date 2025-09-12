@@ -38,15 +38,12 @@ export class BoardState extends RotatingObjectState {
   }
 
   render () {
+    super.render()
+
     const pageX = this.clientX + this.pageX
     const pageY = this.clientY + this.pageY
     const width = this.columns * PIECE_SIZE
     const height = this.rows * PIECE_SIZE
-
-    if (this.angle > 0) {
-      translate(-this.clientX, -this.clientY)
-      rotate(this.angle)
-    }
 
     setColor('#19A974')
     rect('fill', pageX, pageY, width, height, 2)
@@ -65,6 +62,7 @@ export class BoardState extends RotatingObjectState {
   }
 
   update (delta: number) {
+    super.update(delta)
     this.selection.update(delta)
   }
 

@@ -19,8 +19,8 @@ export class SelectionState extends BaseState {
     setColor('#E7040F')
     rect(
       'line',
-      target.pageX + target.x * target.width,
-      target.pageY + target.y * target.height,
+      target.clientX + target.pageX + target.x * target.width,
+      target.clientY + target.pageY + target.y * target.height,
       target.width,
       target.height,
       2
