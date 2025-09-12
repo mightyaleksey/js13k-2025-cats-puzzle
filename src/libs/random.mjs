@@ -18,3 +18,14 @@ export function random (min: number, max?: number): number {
   // generate random integer between min and max (inclusive)
   return Math.floor(next * (max - min + 1)) + min
 }
+
+// Fisher–Yates shuffle
+export function shuffle<T> (sequence: Array<T>): Array<T> {
+  for (let i = sequence.length - 1; i >= 1; i--) {
+    const j = Math.floor(random(i))
+    // $FlowExpectedError[unsupported-syntax]
+    ;[sequence[i], sequence[j]] = [sequence[j], sequence[i]]
+  }
+
+  return sequence
+}

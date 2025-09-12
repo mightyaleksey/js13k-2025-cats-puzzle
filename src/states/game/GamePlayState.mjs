@@ -5,10 +5,11 @@ import {
   T_MACRO_DURATION,
   T_MICRO_DURATION
 } from '../../constants.mjs'
-import { Dimentions, Touch } from '../../engine.mjs'
+import { Touch } from '../../engine.mjs'
 import delay from '../../libs/delay.mjs'
 import { inOutCubic } from '../../libs/easing.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
+import { random, shuffle } from '../../libs/random.mjs'
 import { tween } from '../../libs/timer.mjs'
 import { playSound } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
@@ -45,10 +46,14 @@ import type { PieceState } from '../elements/PieceState.mjs'
  *
  */
 
+const angles = shuffle([-270, -180, -90, 90, 180, 270])
+
 export class GamePlayState extends BaseState {
   // state
   cursor: [number, number]
   interactive: boolean
+  moves: number
+  stepsBeforeRotation: number
   // elements
   bg: BgState
   board: BoardState
@@ -56,12 +61,12 @@ export class GamePlayState extends BaseState {
   enter () {
     this.cursor = [-1, -1]
     this.interactive = true
+    this.moves = 0
+    this.stepsBeforeRotation = random(4, 5)
 
     this.bg = new BgState()
-    const board = (this.board = new BoardState())
-    board.pageX = 0.5 * (Dimentions.width - board.width)
-    board.pageY = 0.5 * (Dimentions.height - board.height)
-    board._genBoard()
+    this.board = new BoardState()
+    this.board._genBoard()
   }
 
   render () {
@@ -120,8 +125,16 @@ export class GamePlayState extends BaseState {
         if (eligiblePositionForMove && this._canMove(targetPiece)) {
           // swap pieces
           this.interactive = false
+          this.moves++
           await this._swapPieces(targetPiece)
           await this._updateBoard()
+          if (this.moves % this.stepsBeforeRotation === 0) {
+            this.stepsBeforeRotation = random(4, 5)
+            // pick first angle and rotate the sequence
+            const angle = nullthrows(angles.shift())
+            angles.push(angle)
+            await this._rotateBoard(angle)
+          }
           this.interactive = true
         } else {
           playSound('selection')
@@ -134,6 +147,16 @@ export class GamePlayState extends BaseState {
         playSound('selection')
       }
     }
+  }
+
+  async _rotateBoard (angle: number) {
+    const multiplier = 2 * Math.floor(Math.abs(angle / 90))
+    await tween(
+      [[this.board, { angle }]],
+      multiplier * T_MACRO_DURATION,
+      inOutCubic
+    )
+    this.board._transpose()
   }
 
   async _swapPieces (targetPiece: PieceState) {

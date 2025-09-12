@@ -1,6 +1,6 @@
 //! ZzFXM (v2.0.3) | (C) Keith Clark | MIT | https://github.com/keithclark/ZzFXM
 import { zzfxG, zzfxR } from './zzfx.mjs'
-
+/* eslint-disable */
 export const zzfxM = (n, f, t, e = 125) => {
   let l
   let o

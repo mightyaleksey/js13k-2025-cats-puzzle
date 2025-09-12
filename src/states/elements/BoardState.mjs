@@ -1,7 +1,7 @@
 /* @flow */
 
 import { PIECE_SIZE, SIBLING_PIECE_COORDS } from '../../constants.mjs'
-import { rect, rotate, setColor, translate } from '../../engine.mjs'
+import { Dimentions, rect, setColor } from '../../engine.mjs'
 import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
@@ -27,14 +27,14 @@ export class BoardState extends RotatingObjectState {
     this.expectedIDs = ids ?? 3
     this.expectedMoves = moves ?? 2
 
-    this.columns = columns ?? 5
+    this.columns = columns ?? 6
     this.rows = rows ?? 5
     this.table = []
 
     this.selection = new SelectionState()
 
-    this.width = this.columns * PIECE_SIZE
-    this.height = this.rows * PIECE_SIZE
+    this._updateDimentions()
+    this._updatePagePosition()
   }
 
   render () {
@@ -263,5 +263,84 @@ export class BoardState extends RotatingObjectState {
     )
 
     return [x, y]
+  }
+
+  _transpose () {
+    // update table to match current angle
+    const angle = (this.angle + 360) % 360
+    if (angle === 0) return
+
+    const rows = angle === 180 ? this.rows : this.columns
+    const columns = angle === 180 ? this.columns : this.rows
+    const table = Array(rows)
+      .fill(0)
+      .map(() => Array(columns).fill(null))
+
+    this.table.forEach((row, y) =>
+      row.forEach((piece, x) => {
+        const tx = this._transposeX(x, y, angle)
+        const ty = this._transposeY(x, y, angle)
+        table[ty][tx] = piece
+
+        if (piece != null) {
+          piece.x = tx
+          piece.y = ty
+        }
+      }))
+
+    this.table.length = 0
+    this.table = table
+
+    this.columns = columns
+    this.rows = rows
+    this._updateDimentions()
+    this._updatePagePosition()
+
+    table.forEach((row) =>
+      row.forEach((piece) => {
+        if (piece == null) return
+        piece.pageX = this.pageX
+        piece.pageY = this.pageY
+        piece._updateOffset()
+      }))
+
+    this.angle = 0
+  }
+
+  _transposeX (x: number, y: number, angle: number): number {
+    switch (angle) {
+      case 90:
+        return this.rows - y - 1
+      case 180:
+        return this.columns - x - 1
+      case 270:
+        return y
+      default:
+        return x
+    }
+  }
+
+  _transposeY (x: number, y: number, angle: number): number {
+    switch (angle) {
+      case 90:
+        return x
+      case 180:
+        return this.rows - y - 1
+      case 270:
+        return this.columns - x - 1
+      default:
+        return y
+    }
+  }
+
+  _updateDimentions () {
+    this.width = this.columns * PIECE_SIZE
+    this.height = this.rows * PIECE_SIZE
+  }
+
+  _updatePagePosition () {
+    // should be called after dimentions
+    this.pageX = 0.5 * (Dimentions.width - this.width)
+    this.pageY = 0.5 * (Dimentions.height - this.height)
   }
 }

@@ -136,7 +136,7 @@ export async function createEngine (
   _state.context = c[1]
 
   document.body?.appendChild(_state.buffer)
-  ; (function gameLoop(previousFrame: number) {
+  ; (function gameLoop (previousFrame: number) {
     const currentFrame = _getTime()
     const delta = currentFrame - previousFrame
 

@@ -37,7 +37,7 @@ export class RotatingObjectState extends ObjectState {
   }
 
   render () {
-    if (this.angle > 0) {
+    if (this.angle !== 0) {
       translate(-this.clientX, -this.clientY)
       rotate(this.angle)
     }
