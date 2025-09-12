@@ -4,19 +4,12 @@ import './libs/random.mjs'
 
 import { createEngine } from './engine.mjs'
 import { updateTimer } from './libs/timer.mjs'
+import { gameState, initNavigation } from './navigation.mjs'
 import { initSoundBank } from './sound.mjs'
-import { GamePlayState } from './states/game/GamePlayState.mjs'
-import { StateMachine } from './states/StateMachine.mjs'
-import { StateStack } from './states/StateStack.mjs'
-
-const gameState = new StateStack()
 
 async function initGame () {
+  initNavigation()
   await initSoundBank()
-
-  gameState.push(
-    new StateMachine({ play: () => new GamePlayState() }).change('play')
-  )
 }
 
 function updateGame (delta: number) {

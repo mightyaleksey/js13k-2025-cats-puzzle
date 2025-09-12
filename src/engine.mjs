@@ -70,12 +70,38 @@ export function ellipse (
   mode === 'fill' ? c.fill() : c.stroke()
 }
 
+export function getTextWidth (text: string): number {
+  const c = _state.context
+  return c.measureText(text).width
+}
+
 export function line (x0: number, y0: number, x1: number, y1: number) {
   const c = _state.context
   c.beginPath()
   c.moveTo(x0, y0)
   c.lineTo(x1, y1)
   c.stroke()
+}
+
+export function printf (
+  text: string,
+  x: number,
+  y: number,
+  limit?: ?number,
+  align?: AlignMode
+) {
+  const c = _state.context
+  limit = limit ?? Dimentions.width - x
+
+  const width = getTextWidth(text)
+  const dx =
+    align === 'right'
+      ? limit - width
+      : align === 'center'
+        ? 0.5 * (limit - width)
+        : 0
+
+  c.fillText(text, Math.floor(x + dx), Math.floor(y), limit)
 }
 
 export function rect (
@@ -107,6 +133,12 @@ export function setColor (color: string, opacity?: number) {
   const c = _state.context
   c.fillStyle = color
   c.strokeStyle = color
+  c.globalAlpha = opacity ?? 1
+}
+
+export function setFont (font: number | string) {
+  const c = _state.context
+  c.font = typeof font === 'number' ? c.font.replace(/\d+/, String(font)) : font
 }
 
 export function setLine (width: number) {
@@ -136,7 +168,7 @@ export async function createEngine (
   _state.context = c[1]
 
   document.body?.appendChild(_state.buffer)
-  ; (function gameLoop (previousFrame: number) {
+  ; (function gameLoop(previousFrame: number) {
     const currentFrame = _getTime()
     const delta = currentFrame - previousFrame
 
