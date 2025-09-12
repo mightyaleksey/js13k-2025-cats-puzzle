@@ -123,6 +123,7 @@ export class GamePlayState extends BaseState {
 
       if (targetPiece != null) {
         if (eligiblePositionForMove && this._canMove(targetPiece)) {
+          playSound('select')
           // swap pieces
           this.interactive = false
           this.moves++
@@ -137,14 +138,14 @@ export class GamePlayState extends BaseState {
           }
           this.interactive = true
         } else {
-          playSound('selection')
+          playSound('error')
           board.selection.target = targetPiece
         }
       }
     } else {
       board._updateSelection(this.cursor[0], this.cursor[1])
       if (board._hasPiece(this.cursor[0], this.cursor[1])) {
-        playSound('selection')
+        playSound('select')
       }
     }
   }

@@ -15,6 +15,8 @@ const _input: { touched: boolean, touches: { [string]: [number, number] } } = {
   touches: {}
 }
 
+type AlignMode = 'center' | 'left' | 'right'
+
 /**
  * Shared type for the mode argument to be used
  * for various shapes drawing
