@@ -27,8 +27,8 @@ export class BgState extends BaseState {
     setColor('#e8ad90')
     rect('fill', 0, 0, width, height)
 
-    for (let x = 0; x < width; x += patternWidth) {
-      for (let y = 0; y < height; y += patternWidth) {
+    for (let x = 0; x < width + patternWidth; x += patternWidth) {
+      for (let y = 0; y < height + patternWidth; y += patternWidth) {
         this._drawPattern(x, y)
       }
     }
