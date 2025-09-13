@@ -101,10 +101,13 @@ export const zzfxG = (
 }
 
 // zzfxV - global volume
-export const zzfxV = 0.3
+export let zzfxV = 0.4
+export function zzfxSV (volume) {
+  zzfxV = volume
+}
 
 // zzfxR - global sample rate
-export const zzfxR = 44100
+export const zzfxR = 22100
 
 // zzfxX - the common audio context
 export const zzfxX = new (window.AudioContext || window.webkitAudioContext)()

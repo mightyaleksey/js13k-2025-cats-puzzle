@@ -12,6 +12,7 @@ import {
 import { outCubic } from '../../libs/easing.mjs'
 import { tween } from '../../libs/timer.mjs'
 import { gameState } from '../../navigation.mjs'
+import { playMusic } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
 
 export class GameStartState extends BaseState {
@@ -34,6 +35,7 @@ export class GameStartState extends BaseState {
 
   update () {
     if (Touch.wasTouched()) {
+      playMusic()
       this._startGame()
     }
   }
