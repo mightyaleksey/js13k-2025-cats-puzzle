@@ -5,7 +5,7 @@ import emptyFunction from './libs/emptyFunction.mjs'
 const _frameRate = 60
 const _minFrameTime = 1 / _frameRate
 const _maxFrameTime = 1
-const _scale = 3
+const _scale = window.innerWidth <= 440 ? 1.6 : 3
 const _state: { buffer: HTMLCanvasElement, context: CanvasRenderingContext2D } =
   // $FlowExpectedError[incompatible-type]
   { buffer: null, context: null }
