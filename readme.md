@@ -14,7 +14,11 @@ Try demo here: [https://mightyaleksey.github.io/js13k-2025-cats-puzzle/](https:/
 
 This time I decided to make a logic game and ended up in building variation of the match-3 game. To keep it entertaining I made rotation logic.
 
-Wanted (but did not made) to make a health concept for the stones (pieces) as wall, so those will get damaged and removed after new stones fall on those. However, due to limited time ended up in endless puzzle game :D
+Wanted (but did not made) to make a health concept for the stones (pieces). When stones fall, they will damage existing stones and remove those if it was too much. However, due to limited time ended up in endless puzzle game :D
+
+## Notes to Players
+
+Use mouse to interact with the board. Try to match 3 similar tiles in a row to collapse those. Tiles can be moved to adjacent positions (only if there is a match).
 
 ## Resources
 
