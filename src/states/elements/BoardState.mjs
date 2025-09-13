@@ -45,7 +45,7 @@ export class BoardState extends RotatingObjectState {
     const width = this.columns * PIECE_SIZE
     const height = this.rows * PIECE_SIZE
 
-    setColor('#19A974')
+    setColor('#BE8353')
     rect('fill', pageX, pageY, width, height, 2)
 
     this.table.forEach((row) =>

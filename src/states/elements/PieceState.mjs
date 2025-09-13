@@ -1,23 +1,12 @@
 /* @flow */
 
+import { gameTiles } from '../../assets.mjs'
 import { PIECE_SIZE } from '../../constants.mjs'
-import { rect, setColor } from '../../engine.mjs'
-import { ObjectState } from './ObjectState.mjs'
+import { draw, rect, setColor } from '../../engine.mjs'
+import { RotatingObjectState } from './ObjectState.mjs'
 
-const colors = [
-  '#FF6300',
-  '#5E2CA5',
-  '#357EDD',
-  '#137752',
-  '#00449E',
-  '#E7040F',
-  '#001B44'
-]
-
-export class PieceState extends ObjectState {
+export class PieceState extends RotatingObjectState {
   id: number
-  clientX: number
-  clientY: number
   offsetX: number
   offsetY: number
   x: number
@@ -26,9 +15,6 @@ export class PieceState extends ObjectState {
   constructor (x: number, y: number, id: number) {
     super()
     this.id = id
-    // global offset helps to compensate canvas origin shift
-    this.clientX = 0
-    this.clientY = 0
     // offset related to the board based on virtual coordinates
     this.offsetX = 0
     this.offsetY = 0
@@ -42,15 +28,15 @@ export class PieceState extends ObjectState {
   }
 
   render () {
-    setColor(colors[this.id])
-    rect(
-      'fill',
-      this.clientX + this.pageX + this.offsetX + 1,
-      this.clientY + this.pageY + this.offsetY + 1,
-      this.width - 2,
-      this.height - 2,
-      2
-    )
+    const pageX = this.clientX + this.pageX + this.offsetX
+    const pageY = this.clientY + this.pageY + this.offsetY
+
+    setColor('#EACD95')
+    rect('fill', pageX + 1, pageY + 1, this.width - 2, this.height - 2, 2)
+    setColor('#FEE7BC')
+    rect('line', pageX + 1, pageY + 1, this.width - 2, this.height - 2, 2)
+
+    draw(gameTiles[this.id], pageX, pageY, this.width, this.height)
   }
 
   toJSON (): $ReadOnly<{ x: number, y: number, id: number }> {

@@ -58,6 +58,27 @@ export function circle (mode: DrawMode, x: number, y: number, radius: number) {
   mode === 'fill' ? c.fill() : c.stroke()
 }
 
+export function draw (
+  drawable: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  const c = _state.context
+  c.drawImage(
+    drawable,
+    0,
+    0,
+    drawable.width,
+    drawable.height,
+    Math.floor(x),
+    Math.floor(y),
+    Math.floor(w),
+    Math.floor(h)
+  )
+}
+
 export function ellipse (
   mode: DrawMode,
   x: number,
@@ -104,6 +125,11 @@ export function printf (
         : 0
 
   c.fillText(text, Math.floor(x + dx), Math.floor(y), limit)
+}
+
+export function putImageData (data: ImageData, x: number, y: number) {
+  const c = _state.context
+  c.putImageData(data, x, y)
 }
 
 export function rect (
@@ -165,7 +191,7 @@ export async function createEngine (
   const render = renderGame ?? emptyFunction
   const update: (number) => void = updateGame ?? emptyFunction
 
-  const c = _createCanvas()
+  const c = createCanvas()
   _state.buffer = c[0]
   _state.context = c[1]
 
@@ -241,14 +267,53 @@ export async function createEngine (
   }
 }
 
+export function genQuads (
+  atlas: HTMLImageElement,
+  width: number,
+  height: number
+): $ReadOnlyArray<HTMLImageElement> {
+  const quads = []
+  const [canvas, canvasContext] = createCanvas(width, height)
+
+  for (let y = 0; y < atlas.height; y += height) {
+    for (let x = 0; x < atlas.width; x += width) {
+      canvasContext.clearRect(0, 0, width, height)
+      canvasContext.drawImage(atlas, -x, -y)
+
+      const image = new window.Image()
+      image.src = canvas.toDataURL('image/png')
+
+      quads.push(image)
+    }
+  }
+
+  return quads
+}
+
+export function newImage (url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error(`Failed to load image: '${url}'`))
+    image.src = url
+  })
+}
+
 /**
  * Helpers
  */
 
-function _createCanvas (): [HTMLCanvasElement, CanvasRenderingContext2D] {
+export function createCanvas (
+  width?: number,
+  height?: number
+): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
+  if (width != null && height != null) {
+    canvas.width = width
+    canvas.height = height
+  }
 
+  const context = canvas.getContext('2d')
   context.imageSmoothingEnabled = false
   context.font = '8px Consolas, monaco, monospace'
   context.textBaseline = 'top'
