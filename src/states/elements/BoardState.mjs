@@ -1,7 +1,7 @@
 /* @flow */
 
 import { PIECE_SIZE, SIBLING_PIECE_COORDS } from '../../constants.mjs'
-import { Dimentions, rect, setColor } from '../../engine.mjs'
+import { Dimentions, rect, setColor, wasResized } from '../../engine.mjs'
 import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
@@ -38,6 +38,11 @@ export class BoardState extends RotatingObjectState {
   }
 
   render () {
+    const isPosUpdated = wasResized()
+    if (isPosUpdated) {
+      this._updatePagePosition()
+    }
+
     super.render()
 
     const pageX = this.clientX + this.pageX
@@ -50,10 +55,15 @@ export class BoardState extends RotatingObjectState {
 
     this.table.forEach((row) =>
       row.forEach((piece) => {
-        if (piece != null) {
-          piece.clientX = this.clientX
-          piece.clientY = this.clientY
-          piece.render()
+        if (piece == null) return
+
+        piece.clientX = this.clientX
+        piece.clientY = this.clientY
+        piece.render()
+
+        if (isPosUpdated) {
+          piece.pageX = this.pageX
+          piece.pageY = this.pageY
         }
       }))
 

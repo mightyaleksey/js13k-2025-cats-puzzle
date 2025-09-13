@@ -10,10 +10,11 @@ const _state: { buffer: HTMLCanvasElement, context: CanvasRenderingContext2D } =
   // $FlowExpectedError[incompatible-type]
   { buffer: null, context: null }
 
-const _input: { touched: boolean, touches: { [string]: [number, number] } } = {
-  touched: false,
-  touches: {}
-}
+const _input: {
+  resized: boolean,
+  touched: boolean,
+  touches: { [string]: [number, number] }
+} = { resized: false, touched: false, touches: {} }
 
 type AlignMode = 'center' | 'left' | 'right'
 
@@ -179,6 +180,10 @@ export function translate (dx: number, dy: number) {
   c.translate(Math.floor(dx), Math.floor(dy))
 }
 
+export function wasResized (): boolean {
+  return _input.resized
+}
+
 export async function createEngine (
   initGame?: ?() => Promise<void>,
   updateGame?: ?(delta: number) => void,
@@ -217,6 +222,7 @@ export async function createEngine (
       render()
       _state.context.restore()
 
+      _input.resized = false
       _input.touched = false
     }
 
@@ -229,6 +235,7 @@ export async function createEngine (
   document.addEventListener('touchstart', onTouch)
   document.addEventListener('touchmove', onTouch)
   document.addEventListener('touchend', onTouchEnd)
+  window.addEventListener('resize', onReisze)
 
   function onClick (event: MouseEvent) {
     _preventDefault(event)
@@ -260,6 +267,10 @@ export async function createEngine (
       const touchEvent = event.changedTouches[t]
       delete _input.touches[String(touchEvent.identifier)]
     }
+  }
+
+  function onReisze () {
+    _input.resized = true
   }
 
   function _preventDefault (event: UIEvent) {
