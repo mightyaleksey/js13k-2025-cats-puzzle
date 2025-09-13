@@ -13,6 +13,5 @@ export function initNavigation () {
     new StateMachine({ play: () => new GamePlayState() }).change('play')
   )
 
-  // todo enable
-  // gameState.push(new GameStartState())
+  gameState.push(new GameStartState())
 }

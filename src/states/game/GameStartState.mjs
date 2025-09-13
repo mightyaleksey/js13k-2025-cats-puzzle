@@ -19,7 +19,7 @@ export class GameStartState extends BaseState {
 
   constructor () {
     super()
-    this.opacity = 0.25
+    this.opacity = 0.5
   }
 
   render () {
@@ -27,8 +27,8 @@ export class GameStartState extends BaseState {
     setColor('#000', this.opacity)
     rect('fill', 0, 0, width, height)
 
-    setColor('#a14e3d')
-    setFont(36)
+    setColor('#edf2f4')
+    setFont(42)
     printf('Cats Puzzle', 0, 0.5 * height, null, 'center')
   }
 
