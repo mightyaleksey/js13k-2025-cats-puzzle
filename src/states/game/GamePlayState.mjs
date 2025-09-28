@@ -15,6 +15,7 @@ import { playSound } from '../../sound.mjs'
 import { BaseState } from '../BaseState.mjs'
 import { BgState } from '../elements/BgState'
 import { BoardState } from '../elements/BoardState.mjs'
+import { InfoState } from '../elements/InfoState.mjs'
 import type { PieceState } from '../elements/PieceState.mjs'
 
 /**
@@ -53,29 +54,41 @@ export class GamePlayState extends BaseState {
   cursor: [number, number]
   interactive: boolean
   moves: number
+  showInfo: boolean
   stepsBeforeRotation: number
+  totalMatches: number
   // elements
   bg: BgState
   board: BoardState
+  info: InfoState
 
   enter () {
     this.cursor = [-1, -1]
     this.interactive = true
     this.moves = 0
+    this.showInfo = false
     this.stepsBeforeRotation = random(4, 5)
+    this.totalMatches = 0
 
     this.bg = new BgState()
     this.board = new BoardState()
     this.board._genBoard()
+    this.info = new InfoState()
+    this.info._updateRotation(this.stepsBeforeRotation)
   }
 
   render () {
     this.bg.render()
     this.board.render()
+    this.showInfo && this.info.render()
   }
 
   update (delta: number) {
     this.board.update(delta)
+
+    if (!this.showInfo) {
+      this.showInfo = true
+    }
 
     if (this.interactive && Touch.wasTouched()) {
       const cursor = this.board._toVirtualCoords(Touch.getPosition())
@@ -127,10 +140,12 @@ export class GamePlayState extends BaseState {
           // swap pieces
           this.interactive = false
           this.moves++
+          this.info._updateMoves(this.moves)
           await this._swapPieces(targetPiece)
           await this._updateBoard()
           if (this.moves % this.stepsBeforeRotation === 0) {
             this.stepsBeforeRotation = random(4, 5)
+            this.info._updateRotation(this.stepsBeforeRotation)
             // pick first angle and rotate the sequence
             const angle = nullthrows(angles.shift())
             angles.push(angle)
@@ -209,6 +224,11 @@ export class GamePlayState extends BaseState {
 
       playSound('match')
       await delay(0.5 * T_MICRO_DURATION)
+
+      this.info._updateMatches(matches.length)
+
+      // calculate matched pieces
+      this.totalMatches += matches.length
 
       // let pieces fall
       const fallingPieces = this.board._getFallingPieces()

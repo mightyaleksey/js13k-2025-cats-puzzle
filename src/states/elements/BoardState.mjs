@@ -1,7 +1,13 @@
 /* @flow */
 
 import { PIECE_SIZE, SIBLING_PIECE_COORDS } from '../../constants.mjs'
-import { Dimentions, rect, setColor, wasResized } from '../../engine.mjs'
+import {
+  Dimentions,
+  rect,
+  restore,
+  setColor,
+  wasResized
+} from '../../engine.mjs'
 import { NO_PIECE_FOUND } from '../../libs/error.mjs'
 import nullthrows from '../../libs/nullthrows.mjs'
 import { random } from '../../libs/random.mjs'
@@ -68,7 +74,7 @@ export class BoardState extends RotatingObjectState {
       }))
 
     this.selection.render()
-    // todo restore
+    restore()
   }
 
   update (delta: number) {

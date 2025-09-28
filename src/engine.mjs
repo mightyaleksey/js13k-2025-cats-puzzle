@@ -153,6 +153,10 @@ export function rect (
   mode === 'fill' ? c.fill() : c.stroke()
 }
 
+export function restore () {
+  _state.context.restore()
+}
+
 export function rotate (degree: number) {
   const c = _state.context
   c.rotate((degree * Math.PI) / 180)
